@@ -3,8 +3,8 @@ import {Component} from "react";
 import Loader from "../loader/loader";
 import ErrorMessage from "../errorMessage/errorMessage";
 import MarvelService from "../../services/MarvelService";
-import mjolnir from '../../resources/img/mjolnir.png';
 
+import mjolnir from '../../resources/img/mjolnir.png';
 import './randomChar.scss';
 
 class RandomChar extends Component {
