@@ -94,7 +94,7 @@ const View = ({char: {name, thumbnail, homepage, description, wiki, comics}}) =>
 			<div className="char__descr">{description}</div>
 			<div className="char__comics">Comics:</div>
 			<ul className="char__comics-list">
-				{ comics.length > 0 ? null : "There's no comics there"}
+				{comics.length > 0 ? null : "There's no comics there"}
 				{
 					comics.map(({name}, i) => {
 						if (i > 9) return;
