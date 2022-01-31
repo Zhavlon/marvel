@@ -72,21 +72,45 @@ class CharList extends Component {
 		})
 	}
 
+
+	itemRefs = []
+
+	setRef = ref => {
+		this.itemRefs.push(ref)
+	}
+
+	refFocus = (i) => {
+		this.itemRefs.forEach(item => {
+			item.classList.remove('char__item_selected')
+		})
+
+		this.itemRefs[i].classList.add('char__item_selected')
+		this.itemRefs[i].focus()
+	}
+
 	renderItems = (arr) => {
-		const items = arr.map(({thumbnail, name, id}) => {
+		const items = arr.map(({thumbnail, name, id}, i) => {
 
 			const objectFit = thumbnail === 'http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available.jpg' ? 'contain' : 'cover'
 
 			return (
 				<li
-					onClick={() => this.props.onCharSelected(id)}
+
+					tabIndex={0}
+					onClick={() => {
+						this.props.onCharSelected(id)
+						this.refFocus(i)
+					}}
+					ref={this.setRef}
 					key={id}
-					className="char__item char__item_selected">
+					className="char__item">
 					<img src={thumbnail} style={{objectFit}} alt="abyss"/>
 					<div className="char__name">{name}</div>
 				</li>
 			)
 		})
+
+		console.log(this.itemRefs)
 
 		return (
 			<ul className="char__grid">
