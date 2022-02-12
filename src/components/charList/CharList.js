@@ -1,4 +1,4 @@
-import {Component} from "react";
+import {useState, useEffect, useRef} from "react";
 import PropTypes from 'prop-types'
 
 import MarvelService from "../../services/MarvelService";
@@ -7,101 +7,92 @@ import ErrorMessage from "../errorMessage/errorMessage";
 
 import './charList.scss';
 
-class CharList extends Component {
-	state = {
-		charList: [],
-		loading: true,
-		error: false,
-		newCharListLoading: false,
-		offset: 250,
-		charEnded: false
-	}
+const CharList = ({onCharSelected}) => {
+	const [charList, setCharList] = useState([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(false);
+	const [newCharListLoading, setNewCharListLoading] = useState(false);
+	const [offset, setOffset] = useState(250);
+	const [charEnded, setCharEnded] = useState(false);
 
-	marvelService = new MarvelService()
+	const marvelService = new MarvelService()
+	console.log(offset)
 
-	componentDidMount() {
-		this.onRequest()
-		window.addEventListener('scroll', this.scrollItemsLoad)
-	}
+	useEffect(() => {
+		onRequest()
+	}, [])
 
-	componentWillUnmount() {
-		window.removeEventListener('scroll', this.scrollItemsLoad)
-	}
+	useEffect(() => {
+		window.addEventListener('scroll', scrollItemsLoad)
+		return () => {
+			window.removeEventListener('scroll', scrollItemsLoad)
+		}
+	})
 
-	scrollItemsLoad = () => {
+	const scrollItemsLoad = () => {
 		const page = document.documentElement
-		const {offset} = this.state
 
 		if (page.clientHeight + page.scrollTop >= page.scrollHeight) {
-			this.onRequest(offset)
+			onRequest(offset)
 		}
 	}
 
-	onRequest = (offset) => {
-		this.newCharListLoading()
-		this.marvelService.getAllCharacters(offset)
-			.then(this.onCharListLoaded)
-			.catch(this.onError)
+	let renderCount = useRef(1)
+
+	useEffect(() => {
+		renderCount.current += 1
+		console.log(renderCount.current)
+	})
+
+	const onRequest = (offset) => {
+		setNewCharListLoading(true)
+		marvelService.getAllCharacters(offset)
+			.then(onCharListLoaded)
+			.catch(onError)
 	}
 
-	onError = () => {
-		this.setState({
-			loading: false,
-			error: true
-		})
+	const onError = () => {
+		setLoading(false)
+		setError(true)
 	}
 
-	onCharListLoaded = (newCharList) => {
+	const onCharListLoaded = (newCharList) => {
 		let ended = false
 		if (newCharList.length < 9) {
 			ended = true
 		}
 
-		this.setState(({charList, offset}) => ({
-			charList: [...charList, ...newCharList],
-			loading: false,
-			newCharListLoading: false,
-			offset: offset + 9,
-			charEnded: ended
-		}))
+		setCharList(charList => ([...charList, ...newCharList]))
+		setLoading(false)
+		setNewCharListLoading(false)
+		setOffset(offset => offset + 9)
+		setCharEnded(ended)
 	}
 
-	newCharListLoading = () => {
-		this.setState({
-			newCharListLoading: true
-		})
-	}
+	const itemRefs = useRef([])
 
-
-	itemRefs = []
-
-	setRef = ref => {
-		this.itemRefs.push(ref)
-	}
-
-	refFocus = (i) => {
-		this.itemRefs.forEach(item => {
+	const refFocus = (i) => {
+		itemRefs.current.forEach(item => {
 			item.classList.remove('char__item_selected')
 		})
 
-		this.itemRefs[i].classList.add('char__item_selected')
-		this.itemRefs[i].focus()
+		itemRefs.current[i].classList.add('char__item_selected')
+		itemRefs.current[i].focus()
 	}
 
-	renderItems = (arr) => {
+	const renderItems = (arr) => {
 		const items = arr.map(({thumbnail, name, id}, i) => {
 
 			const objectFit = thumbnail === 'http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available.jpg' ? 'contain' : 'cover'
 
 			return (
 				<li
-
 					tabIndex={0}
 					onClick={() => {
-						this.props.onCharSelected(id)
-						this.refFocus(i)
+						onCharSelected(id)
+						refFocus(i)
 					}}
-					ref={this.setRef}
+					ref={el => itemRefs.current[i] = el}
 					key={id}
 					className="char__item">
 					<img src={thumbnail} style={{objectFit}} alt="abyss"/>
@@ -110,8 +101,6 @@ class CharList extends Component {
 			)
 		})
 
-		console.log(this.itemRefs)
-
 		return (
 			<ul className="char__grid">
 				{items}
@@ -119,31 +108,27 @@ class CharList extends Component {
 		)
 	}
 
-	render() {
-		const {charList, loading, error, newCharListLoading, offset, charEnded} = this.state
+	const items = renderItems(charList)
 
-		const items = this.renderItems(charList)
+	const loader = loading ? <Loader/> : null
+	const errorMessage = error ? <ErrorMessage/> : null
+	const content = !(loading || error) ? items : null
 
-		const loader = loading ? <Loader/> : null
-		const errorMessage = error ? <ErrorMessage/> : null
-		const content = !(loading || error) ? items : null
-
-		return (
-			<div className="char__list">
-				{errorMessage}
-				{loader}
-				{content}
-				<button
-					style={{display: charEnded ? 'none' : 'block'}}
-					onClick={() => this.onRequest(offset)}
-					disabled={newCharListLoading}
-					className="button button__main button__long"
-				>
-					<div className="inner">load more</div>
-				</button>
-			</div>
-		)
-	}
+	return (
+		<div className="char__list">
+			{errorMessage}
+			{loader}
+			{content}
+			<button
+				style={{display: charEnded ? 'none' : 'block'}}
+				onClick={() => onRequest(offset)}
+				disabled={newCharListLoading}
+				className="button button__main button__long"
+			>
+				<div className="inner">load more</div>
+			</button>
+		</div>
+	)
 }
 
 CharList.propTypes = {
