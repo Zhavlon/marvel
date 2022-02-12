@@ -16,7 +16,6 @@ const CharList = ({onCharSelected}) => {
 	const [charEnded, setCharEnded] = useState(false);
 
 	const marvelService = new MarvelService()
-	console.log(offset)
 
 	useEffect(() => {
 		onRequest()
@@ -36,13 +35,6 @@ const CharList = ({onCharSelected}) => {
 			onRequest(offset)
 		}
 	}
-
-	let renderCount = useRef(1)
-
-	useEffect(() => {
-		renderCount.current += 1
-		console.log(renderCount.current)
-	})
 
 	const onRequest = (offset) => {
 		setNewCharListLoading(true)
