@@ -1,39 +1,35 @@
-class MarvelService {
-	_apiBase = 'https://gateway.marvel.com:443/v1/public/'
-	_apiKey = 'apikey=fb532fff92184ba4eac9f9a871e66ed5'
-	_baseOffset = 250
+import {useHttp} from '../hooks/http.hook'
 
-	getResource = async (url) => {
-		const res = await fetch(url)
+const useMarvelService = () => {
+    const {loading, error, request} = useHttp()
 
-		if (!res.ok) {
-			throw new Error(`Couldn't fetch ${url}, status: ${res.status}`)
-		}
+    const _apiBase = 'https://gateway.marvel.com:443/v1/public/'
+    const _apiKey = 'apikey=fb532fff92184ba4eac9f9a871e66ed5'
+    const _baseOffset = 250
 
-		return await res.json()
-	}
+    const getAllCharacters = async (offset = _baseOffset) => {
+        const res = await request(`${_apiBase}characters?limit=9&offset=${offset}&${_apiKey}`)
+        return res.data.results.map(_transformCharacter)
+    }
 
-	getAllCharacters = async (offset = this._baseOffset) => {
-		const res = await this.getResource(`${this._apiBase}characters?limit=9&offset=${offset}&${this._apiKey}`)
-		return res.data.results.map(this._transformCharacter)
-	}
+    const getCharacter = async (id) => {
+        const res = await request(`${_apiBase}characters/${id}?${_apiKey}`)
+        return _transformCharacter(res.data.results[0])
+    }
 
-	getCharacter = async (id) => {
-		const res = await this.getResource(`${this._apiBase}characters/${id}?${this._apiKey}`)
-		return this._transformCharacter(res.data.results[0])
-	}
+    const _transformCharacter = (res) => {
+        return {
+            id: res.id,
+            name: res.name,
+            description: res.description ? `${res.description.slice(0, 200)}...` : 'This character has no description :)',
+            thumbnail: res.thumbnail.path + '.' + res.thumbnail.extension,
+            homepage: res.urls[0].url,
+            wiki: res.urls[1].url,
+            comics: res.comics.items
+        }
+    }
 
-	_transformCharacter = (res) => {
-		return {
-			id: res.id,
-			name: res.name,
-			description: res.description ? `${res.description.slice(0, 200)}...` : 'This character has no description :)',
-			thumbnail: res.thumbnail.path + '.' + res.thumbnail.extension,
-			homepage: res.urls[0].url,
-			wiki: res.urls[1].url,
-			comics: res.comics.items
-		}
-	}
+    return {loading, error, getAllCharacters, getCharacter}
 }
 
-export default MarvelService
+export default useMarvelService
