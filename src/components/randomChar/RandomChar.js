@@ -14,7 +14,6 @@ const RandomChar = () => {
 	let timerId = useRef(null)
 	useEffect(() => {
 		updateChar()
-		clearError()
 		timerId = setInterval(updateChar, 5000)
 		return () => {
 			clearInterval(timerId)
@@ -26,6 +25,7 @@ const RandomChar = () => {
 	}
 
 	const updateChar = () => {
+		clearError()
 		const id = Math.floor(Math.random() * (1011400 - 1011000) + 1011000)
 		getCharacter(id)
 			.then(onCharLoaded)

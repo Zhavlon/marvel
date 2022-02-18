@@ -1,7 +1,7 @@
 import {useState, useEffect, useRef} from "react";
 import PropTypes from 'prop-types'
 
-import MarvelService from "../../services/MarvelService";
+import useMarvelService from "../../services/MarvelService";
 import Loader from "../loader/loader";
 import ErrorMessage from "../errorMessage/errorMessage";
 
@@ -9,16 +9,14 @@ import './charList.scss';
 
 const CharList = ({onCharSelected}) => {
 	const [charList, setCharList] = useState([]);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState(false);
 	const [newCharListLoading, setNewCharListLoading] = useState(false);
 	const [offset, setOffset] = useState(250);
 	const [charEnded, setCharEnded] = useState(false);
 
-	const marvelService = new MarvelService()
+	const {loading, error, getAllCharacters} = useMarvelService()
 
 	useEffect(() => {
-		onRequest()
+		onRequest(offset, true)
 	}, [])
 
 	useEffect(() => {
@@ -36,16 +34,10 @@ const CharList = ({onCharSelected}) => {
 		}
 	}
 
-	const onRequest = (offset) => {
-		setNewCharListLoading(true)
-		marvelService.getAllCharacters(offset)
+	const onRequest = (offset, initial) => {
+		initial ? setNewCharListLoading(false) : setNewCharListLoading(true)
+		getAllCharacters(offset)
 			.then(onCharListLoaded)
-			.catch(onError)
-	}
-
-	const onError = () => {
-		setLoading(false)
-		setError(true)
 	}
 
 	const onCharListLoaded = (newCharList) => {
@@ -55,7 +47,6 @@ const CharList = ({onCharSelected}) => {
 		}
 
 		setCharList(charList => ([...charList, ...newCharList]))
-		setLoading(false)
 		setNewCharListLoading(false)
 		setOffset(offset => offset + 9)
 		setCharEnded(ended)
@@ -84,6 +75,12 @@ const CharList = ({onCharSelected}) => {
 						onCharSelected(id)
 						refFocus(i)
 					}}
+					onKeyPress={e => {
+						if (e.key === 'Enter') {
+							onCharSelected(id)
+							refFocus(i)
+						}
+					}}
 					ref={el => itemRefs.current[i] = el}
 					key={id}
 					className="char__item">
@@ -102,15 +99,14 @@ const CharList = ({onCharSelected}) => {
 
 	const items = renderItems(charList)
 
-	const loader = loading ? <Loader/> : null
+	const loader = loading && !newCharListLoading ? <Loader/> : null
 	const errorMessage = error ? <ErrorMessage/> : null
-	const content = !(loading || error) ? items : null
 
 	return (
 		<div className="char__list">
 			{errorMessage}
 			{loader}
-			{content}
+			{items}
 			<button
 				style={{display: charEnded ? 'none' : 'block'}}
 				onClick={() => onRequest(offset)}
