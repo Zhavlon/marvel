@@ -4,6 +4,9 @@
     &__header {
         display: flex;
         justify-content: space-between;
+        &-active{
+            color: #9F0013;
+        }
     }
     &__title {
         font-weight: bold;
