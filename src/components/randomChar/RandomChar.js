@@ -2,98 +2,85 @@ import {useState, useEffect, useRef} from "react";
 
 import Loader from "../loader/loader";
 import ErrorMessage from "../errorMessage/errorMessage";
-import MarvelService from "../../services/MarvelService";
+import useMarvelService from "../../services/MarvelService";
 
 import mjolnir from '../../resources/img/mjolnir.png';
 import './randomChar.scss';
 
 const RandomChar = () => {
-    const [char, setChar] = useState({});
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(false)
+	const [char, setChar] = useState({});
+	const {loading, error, clearError, getCharacter} = useMarvelService()
 
-    let timerId = useRef(null)
-    useEffect(() => {
-        updateChar()
-        // timerId = setInterval(updateChar, 10000)
-        return () => {
-            clearInterval(timerId)
-        }
-    }, [])
+	let timerId = useRef(null)
+	useEffect(() => {
+		updateChar()
+		timerId = setInterval(updateChar, 5000)
+		return () => {
+			clearInterval(timerId)
+		}
+	}, [])
 
-    const marvelService = new MarvelService()
+	const onCharLoaded = (char) => {
+		setChar(char)
+	}
 
-    const onCharLoaded = (char) => {
-        setChar(char)
-        setLoading(false)
-    }
+	const updateChar = () => {
+		clearError()
+		const id = Math.floor(Math.random() * (1011400 - 1011000) + 1011000)
+		getCharacter(id)
+			.then(onCharLoaded)
+	}
 
-    const onError = () => {
-        setError(true)
-        setLoading(false)
-    }
+	const errorMessage = error ? <ErrorMessage/> : null
+	const loader = loading ? <Loader/> : null
+	const content = !(loading || error) ? <View char={char}/> : null
 
-    const onCharLoading = () => setLoading(true)
+	return (
+		<div className="randomchar">
 
-    const updateChar = () => {
-        onCharLoading()
-        const id = Math.floor(Math.random() * (1011400 - 1011000) + 1011000)
-        marvelService
-            .getCharacter(id)
-            .then(onCharLoaded)
-            .catch(onError)
-    }
+			{errorMessage}
+			{loader}
+			{content}
 
-    const errorMessage = error ? <ErrorMessage/> : null
-    const loader = loading ? <Loader/> : null
-    const content = !(loading || error) ? <View char={char}/> : null
-
-    return (
-        <div className="randomchar">
-
-            {errorMessage}
-            {loader}
-            {content}
-
-            <div className="randomchar__static">
-                <p className="randomchar__title">
-                    Random character for today!<br/>
-                    Do you want to get to know him better?
-                </p>
-                <p className="randomchar__title">
-                    Or choose another one
-                </p>
-                <button
-                    onClick={updateChar}
-                    className="button button__main">
-                    <div className="inner">try it</div>
-                </button>
-                <img src={mjolnir} alt="mjolnir" className="randomchar__decoration"/>
-            </div>
-        </div>
-    )
+			<div className="randomchar__static">
+				<p className="randomchar__title">
+					Random character for today!<br/>
+					Do you want to get to know him better?
+				</p>
+				<p className="randomchar__title">
+					Or choose another one
+				</p>
+				<button
+					onClick={updateChar}
+					className="button button__main">
+					<div className="inner">try it</div>
+				</button>
+				<img src={mjolnir} alt="mjolnir" className="randomchar__decoration"/>
+			</div>
+		</div>
+	)
 }
 
 const View = ({char: {thumbnail, name, description, homepage, wiki}}) => {
-    const objectFit = thumbnail === 'http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available.jpg' ? 'contain' : 'cover'
+	const objectFit = thumbnail === 'http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available.jpg' ? 'contain' : 'cover'
 
-    return (
-        <div className="randomchar__block">
-            <img src={thumbnail} alt="Random character" style={{objectFit}} className="randomchar__img"/>
-            <div className="randomchar__info">
-                <p className="randomchar__name">{name}</p>
-                <p className="randomchar__descr">{description}</p>
-                <div className="randomchar__btns">
-                    <a href={homepage} className="button button__main">
-                        <div className="inner">homepage</div>
-                    </a>
-                    <a href={wiki} className="button button__secondary">
-                        <div className="inner">Wiki</div>
-                    </a>
-                </div>
-            </div>
-        </div>
-    )
+	return (
+		<div className="randomchar__block">
+			<img src={thumbnail} alt="Random character" style={{objectFit}} className="randomchar__img"/>
+			<div className="randomchar__info">
+				<p className="randomchar__name">{name}</p>
+				<p className="randomchar__descr">{description}</p>
+				<div className="randomchar__btns">
+					<a href={homepage} className="button button__main">
+						<div className="inner">homepage</div>
+					</a>
+					<a href={wiki} className="button button__secondary">
+						<div className="inner">Wiki</div>
+					</a>
+				</div>
+			</div>
+		</div>
+	)
 }
 
 export default RandomChar;
