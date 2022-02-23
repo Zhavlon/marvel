@@ -14,7 +14,7 @@ const RandomChar = () => {
 	let timerId = useRef(null)
 	useEffect(() => {
 		updateChar()
-		timerId = setInterval(updateChar, 5000)
+		// timerId = setInterval(updateChar, 5000)
 		return () => {
 			clearInterval(timerId)
 		}
