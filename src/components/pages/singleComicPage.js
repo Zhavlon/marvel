@@ -15,9 +15,8 @@ const SingleComicPage = () => {
 		updateChar()
 	}, [comicId])
 
-	const onComicLoaded = (comic) => {
+	const onComicLoaded = async (comic) => {
 		setComic(comic)
-		console.log(comic)
 	}
 
 	const updateChar = () => {
@@ -41,8 +40,6 @@ const SingleComicPage = () => {
 
 
 const View = ({comic: {title, description, thumbnail, pageCount, language, price}}) => {
-
-
 	return (
 		<div className="single-comic">
 			<img src={thumbnail} alt="x-men" className="single-comic__img"/>
